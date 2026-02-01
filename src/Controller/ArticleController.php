@@ -65,8 +65,12 @@ class ArticleController extends AbstractController
 
     // Affichage d'un article
     #[Route('/{id}', name: 'article_show', methods: ['GET'])]
-    public function show(Article $article): Response
+    public function show(Article $article, EntityManagerInterface $em): Response
     {
+        // Incrémenter le compteur de vues
+        $article->incrementViews();
+        $em->flush();
+
         return $this->render('article/show.html.twig', [
             'article' => $article,
         ]);
@@ -102,6 +106,6 @@ class ArticleController extends AbstractController
 
     // Revient à la liste
     return $this->redirectToRoute('article_index');
-}
+    }
 
 }

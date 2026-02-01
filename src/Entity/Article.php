@@ -16,6 +16,10 @@ class Article
     #[ORM\Column(type: 'string', length: 255)]
     private $title;
 
+    //integration colonne bdd pour un compteur
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $views = 0;
+
     #[ORM\Column(type: 'text')]
     private $content;
 
@@ -37,6 +41,18 @@ class Article
     {
         $this->title = $title;
 
+        return $this;
+    }
+
+    //On récupère la valeur du compteur
+    public function getViews(): int
+    {
+        return $this->views;
+    }
+
+    public function incrementViews(): self
+    {
+        $this->views++;
         return $this;
     }
 
