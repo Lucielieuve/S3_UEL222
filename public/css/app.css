@@ -1,0 +1,17 @@
+:root {
+  --first: #E85412;
+}
+
+.navbar-custom {
+  background-color: var(--first);
+}
+
+.article-card {
+  border-radius: 1rem;
+}
+
+.btn-primary {
+  background-color: var(--first);
+  border-color: var(--first);
+}
+

@@ -1,43 +1,120 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Article index{% endblock %}
+{% block title %}Accueil - Articles{% endblock %}
 
 {% block body %}
-    <h1>Article index</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Content</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for article in articles %}
-            <tr>
-                <td>{{ article.id }}</td>
-                <td>{{ article.title }}</td>
-                <td>
-                    {% if article.Category.name is defined %}
-                        {{ article.Category.name }}
-                    {% endif %}
-                </td>
-                <td>{{ article.content }}</td>
-                <td>
-                    <a href="{{ path('article_show', {'id': article.id}) }}">show</a>
-                    <a href="{{ path('article_edit', {'id': article.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="4">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+  {# ====== En-tête : titre + boutons ====== #}
+  <div class="d-flex justify-content-between align-items-center mb-4">
 
-    <a href="{{ path('article_new') }}">Create new</a>
+    <div>
+      <h1 class="h3 mb-1">Accueil - Articles</h1>
+
+      {# Affiche le nombre total d'articles s'il y en a dans la bdd grâce au controlleur #}
+      {% if total is not null %}
+        <p class="text-muted mb-0">{{ total }} article(s)</p>
+      {% endif %}
+    </div>
+
+    <div class="d-flex gap-2">
+      {# Lien vers le formulaire de création #}
+      <a class="btn btn-primary" href="{{ path('article_new') }}">
+        + Ajouter un article
+      </a>
+
+      {# Lien vers la liste des catégories #}
+      <a class="btn btn-outline-secondary" href="{{ path('category_index') }}">
+        Catégories
+      </a>
+    </div>
+
+  </div>
+
+
+  {# ====== Si aucun article ====== #}
+  {% if articles|length == 0 %}
+    <div class="alert alert-warning">
+      Aucun article pour le moment.
+    </div>
+
+  {# ====== Sinon affichage des articles présents ====== #}
+  {% else %}
+
+    <div class="row g-3">
+      {% for article in articles %}
+        <div class="col-12 col-md-6 col-lg-4">
+
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+
+              {# Affiche le titre et la catégorie #}
+              <div class="d-flex justify-content-between align-items-start">
+                <h5 class="card-title mb-1">{{ article.title }}</h5>
+
+                {% if article.category %}
+                  <span class="badge text-bg-secondary">
+                    {{ article.category.name }}
+                  </span>
+                {% endif %}
+              </div>
+
+              {# Extrait de la description #}
+              <p class="card-text text-muted mt-2">
+                {{ article.content|slice(0, 100) }}...
+              </p>
+
+              {# Boutons lire pour accéder à la fiche ou modifier #}
+              <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-primary"
+                   href="{{ path('article_show', {id: article.id}) }}">
+                  Lire
+                </a>
+
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="{{ path('article_edit', {id: article.id}) }}">
+                  Modifier
+                </a>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      {% endfor %}
+    </div>
+
+
+    {# ====== Pagination ====== #}
+    {% if pages > 1 %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+          {# Bouton "Précédent" désactivé si première page #}
+          <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ path('article_index', {page: page - 1}) }}">
+              Précédent
+            </a>
+          </li>
+
+          {# Affiche toutes les pages #}
+          {% for p in 1..pages %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+              <a class="page-link" href="{{ path('article_index', {page: p}) }}">
+                {{ p }}
+              </a>
+            </li>
+          {% endfor %}
+
+          {# Bouton "Suivant" désactivé si dernière page #}
+          <li class="page-item {% if page >= pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ path('article_index', {page: page + 1}) }}">
+              Suivant
+            </a>
+          </li>
+
+        </ul>
+      </nav>
+    {% endif %}
+
+  {% endif %}
 {% endblock %}

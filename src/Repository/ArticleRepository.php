@@ -12,12 +12,43 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Article[]    findAll()
  * @method Article[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
+ 
 class ArticleRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
+        // Doctrine : ce repository = Article
         parent::__construct($registry, Article::class);
     }
+
+    // Pagination
+    public function findPaginated(int $page = 1, int $limit = 6): array
+    { 
+        $total = $this->count([]);
+
+        // On récupère seulement les articles de la page demandée
+        $offset = ($page - 1) * $limit;
+
+        $items = $this->createQueryBuilder('a')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+
+        // Nombre total de pages
+        $pages = (int) ceil($total / $limit);
+
+        // On renvoie tout au controlleur
+        return [
+            'items' => $items,   // les articles à afficher
+            'total' => $total,   // nombre total d'articles
+            'page'  => $page,    // la page actuelle
+            'pages' => $pages,   // nombre total de pages
+            'limit' => $limit,   // limite nombre d'articles par page
+        ];
+    }
+}
+
 
     // /**
     //  * @return Article[] Returns an array of Article objects
@@ -47,4 +78,4 @@ class ArticleRepository extends ServiceEntityRepository
         ;
     }
     */
-}
+

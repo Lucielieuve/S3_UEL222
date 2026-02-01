@@ -14,34 +14,56 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/article')]
 class ArticleController extends AbstractController
 {
+    //Liste des articles avec pagination + modification de l'URL
     #[Route('/', name: 'article_index', methods: ['GET'])]
-    public function index(ArticleRepository $articleRepository): Response
+    public function index(Request $request, ArticleRepository $articleRepository): Response
     {
+        // On récupère la page dans l'URL
+        $page = (int) $request->query->get('page', 1);
+
+        // Limite du nombre d'articles par page
+        $limit = 6;
+
+        // Appelle la pagination dans le repo Article
+        $data = $articleRepository->findPaginated($page, $limit);
+
+        // Transmission des données à Twig
         return $this->render('article/index.html.twig', [
-            'articles' => $articleRepository->findAll(),
+            'articles' => $data['items'],
+            'page'     => $data['page'],
+            'pages'    => $data['pages'],
+            'total'    => $data['total'],
         ]);
     }
 
+    // Création d'un nouvel article
     #[Route('/new', name: 'article_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $em): Response
     {
         $article = new Article();
+
+        // On crée le formulaire à partir de ArticleType de Symfony
         $form = $this->createForm(ArticleType::class, $article);
+
+        // On remplit l'objet $article avec les données envoyées par le formulaire
         $form->handleRequest($request);
 
+        // Si le formulaire est envoyé et valide, on enregistre l'article dans la bdd
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($article);
-            $entityManager->flush();
+            $em->persist($article); // prépare 
+            $em->flush();           // enregistre 
 
-            return $this->redirectToRoute('article_index', [], Response::HTTP_SEE_OTHER);
+            // A la fin, redirige vers la liste
+            return $this->redirectToRoute('article_index');
         }
 
+        // Sinon redirection vers le formulaire
         return $this->renderForm('article/new.html.twig', [
-            'article' => $article,
             'form' => $form,
         ]);
     }
 
+    // Affichage d'un article
     #[Route('/{id}', name: 'article_show', methods: ['GET'])]
     public function show(Article $article): Response
     {
@@ -50,32 +72,36 @@ class ArticleController extends AbstractController
         ]);
     }
 
+    // Modifier un article
     #[Route('/{id}/edit', name: 'article_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Article $article, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Article $article, EntityManagerInterface $em): Response
     {
+
         $form = $this->createForm(ArticleType::class, $article);
         $form->handleRequest($request);
 
+        // Si valide, ça sauvegarde les changements
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
+            $em->flush();
 
-            return $this->redirectToRoute('article_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('article_index');
         }
 
         return $this->renderForm('article/edit.html.twig', [
-            'article' => $article,
             'form' => $form,
+            'article' => $article,
         ]);
     }
 
+    // Supprimer un article
     #[Route('/{id}', name: 'article_delete', methods: ['POST'])]
-    public function delete(Request $request, Article $article, EntityManagerInterface $entityManager): Response
+    public function delete(Article $article, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$article->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($article);
-            $entityManager->flush();
-        }
+        $em->remove($article);
+        $em->flush();
 
-        return $this->redirectToRoute('article_index', [], Response::HTTP_SEE_OTHER);
-    }
+    // Revient à la liste
+    return $this->redirectToRoute('article_index');
+}
+
 }
